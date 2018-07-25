@@ -16,11 +16,13 @@ public struct DataReader {
     ///  - Parameter handler: the handler to be called when finish reading all data
     public static func read(_ input: SWSGIInput, handler: @escaping ((Data) -> Void)) {
         var buffer: Data = Data()
+        var didSendBuffer = false
         // read all data into buffer
         input { data in
             buffer.append(data)
             // EOF, flush
-            if data.isEmpty {
+            if data.isEmpty && !didSendBuffer {
+                didSendBuffer = true
                 handler(buffer)
             }
         }
