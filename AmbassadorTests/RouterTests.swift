@@ -262,4 +262,279 @@ class RouterTests: XCTestCase {
         receivedStatus.removeAll()
         receivedData.removeAll()
     }
+
+    func testRoutingForMultipleHTTPMethods() {
+        let router = Router()
+        router.get(path: "/resource", DataResponse() { environ -> Data in
+            return Data("GET".utf8)
+        })
+        router.head(path: "/resource", DataResponse() { environ -> Data in
+            return Data("HEAD".utf8)
+        })
+        router.post(path: "/resource", DataResponse() { environ -> Data in
+            return Data("POST".utf8)
+        })
+        router.put(path: "/resource", DataResponse() { environ -> Data in
+            return Data("PUT".utf8)
+        })
+        router.delete(path: "/resource", DataResponse() { environ -> Data in
+            return Data("DELETE".utf8)
+        })
+        router.connect(path: "/resource", DataResponse() { environ -> Data in
+            return Data("CONNECT".utf8)
+        })
+        router.options(path: "/resource", DataResponse() { environ -> Data in
+            return Data("OPTIONS".utf8)
+        })
+        router.trace(path: "/resource", DataResponse() { environ -> Data in
+            return Data("TRACE".utf8)
+        })
+        router.patch(path: "/resource", DataResponse() { environ -> Data in
+            return Data("PATCH".utf8)
+        })
+
+        router["/fallback"] = DataResponse() { environ -> Data in
+            return Data("*".utf8)
+        }
+
+        var receivedStatus: [String] = []
+        let startResponse = { (status: String, headers: [(String, String)]) in
+            receivedStatus.append(status)
+        }
+
+        var receivedData: [Data] = []
+        let sendBody = { (data: Data) in
+            receivedData.append(data)
+        }
+
+        // test GET /resource
+        var environ: [String: Any] = [
+            "REQUEST_METHOD": "GET",
+            "SCRIPT_NAME": "",
+            "PATH_INFO": "/resource",
+        ]
+        router.app(
+            environ,
+            startResponse: startResponse,
+            sendBody: sendBody
+        )
+        XCTAssertEqual(receivedStatus.count, 1)
+        XCTAssertEqual(receivedStatus.last, "200 OK")
+        XCTAssertEqual(receivedData.count, 2)
+        XCTAssertEqual(String(data: receivedData[0], encoding: .utf8), "GET")
+        XCTAssertEqual(receivedData.last?.count, 0)
+        receivedStatus.removeAll()
+        receivedData.removeAll()
+
+        // test HEAD /resource
+        environ = [
+            "REQUEST_METHOD": "HEAD",
+            "SCRIPT_NAME": "",
+            "PATH_INFO": "/resource",
+        ]
+        router.app(
+            environ,
+            startResponse: startResponse,
+            sendBody: sendBody
+        )
+        XCTAssertEqual(receivedStatus.count, 1)
+        XCTAssertEqual(receivedStatus.last, "200 OK")
+        XCTAssertEqual(receivedData.count, 2)
+        XCTAssertEqual(String(data: receivedData[0], encoding: .utf8), "HEAD")
+        XCTAssertEqual(receivedData.last?.count, 0)
+        receivedStatus.removeAll()
+        receivedData.removeAll()
+
+        // test POST /resource
+        environ = [
+            "REQUEST_METHOD": "POST",
+            "SCRIPT_NAME": "",
+            "PATH_INFO": "/resource",
+        ]
+        router.app(
+            environ,
+            startResponse: startResponse,
+            sendBody: sendBody
+        )
+        XCTAssertEqual(receivedStatus.count, 1)
+        XCTAssertEqual(receivedStatus.last, "200 OK")
+        XCTAssertEqual(receivedData.count, 2)
+        XCTAssertEqual(String(data: receivedData[0], encoding: .utf8), "POST")
+        XCTAssertEqual(receivedData.last?.count, 0)
+        receivedStatus.removeAll()
+        receivedData.removeAll()
+
+        // test PUT /resource
+        environ = [
+            "REQUEST_METHOD": "PUT",
+            "SCRIPT_NAME": "",
+            "PATH_INFO": "/resource",
+        ]
+        router.app(
+            environ,
+            startResponse: startResponse,
+            sendBody: sendBody
+        )
+        XCTAssertEqual(receivedStatus.count, 1)
+        XCTAssertEqual(receivedStatus.last, "200 OK")
+        XCTAssertEqual(receivedData.count, 2)
+        XCTAssertEqual(String(data: receivedData[0], encoding: .utf8), "PUT")
+        XCTAssertEqual(receivedData.last?.count, 0)
+        receivedStatus.removeAll()
+        receivedData.removeAll()
+
+        // test DELETE /resource
+        environ = [
+            "REQUEST_METHOD": "DELETE",
+            "SCRIPT_NAME": "",
+            "PATH_INFO": "/resource",
+        ]
+        router.app(
+            environ,
+            startResponse: startResponse,
+            sendBody: sendBody
+        )
+        XCTAssertEqual(receivedStatus.count, 1)
+        XCTAssertEqual(receivedStatus.last, "200 OK")
+        XCTAssertEqual(receivedData.count, 2)
+        XCTAssertEqual(String(data: receivedData[0], encoding: .utf8), "DELETE")
+        XCTAssertEqual(receivedData.last?.count, 0)
+        receivedStatus.removeAll()
+        receivedData.removeAll()
+
+        // test CONNECT /resource
+        environ = [
+            "REQUEST_METHOD": "CONNECT",
+            "SCRIPT_NAME": "",
+            "PATH_INFO": "/resource",
+        ]
+        router.app(
+            environ,
+            startResponse: startResponse,
+            sendBody: sendBody
+        )
+        XCTAssertEqual(receivedStatus.count, 1)
+        XCTAssertEqual(receivedStatus.last, "200 OK")
+        XCTAssertEqual(receivedData.count, 2)
+        XCTAssertEqual(String(data: receivedData[0], encoding: .utf8), "CONNECT")
+        XCTAssertEqual(receivedData.last?.count, 0)
+        receivedStatus.removeAll()
+        receivedData.removeAll()
+
+        // test OPTIONS /resource
+        environ = [
+            "REQUEST_METHOD": "OPTIONS",
+            "SCRIPT_NAME": "",
+            "PATH_INFO": "/resource",
+        ]
+        router.app(
+            environ,
+            startResponse: startResponse,
+            sendBody: sendBody
+        )
+        XCTAssertEqual(receivedStatus.count, 1)
+        XCTAssertEqual(receivedStatus.last, "200 OK")
+        XCTAssertEqual(receivedData.count, 2)
+        XCTAssertEqual(String(data: receivedData[0], encoding: .utf8), "OPTIONS")
+        XCTAssertEqual(receivedData.last?.count, 0)
+        receivedStatus.removeAll()
+        receivedData.removeAll()
+
+        // test TRACE /resource
+        environ = [
+            "REQUEST_METHOD": "TRACE",
+            "SCRIPT_NAME": "",
+            "PATH_INFO": "/resource",
+        ]
+        router.app(
+            environ,
+            startResponse: startResponse,
+            sendBody: sendBody
+        )
+        XCTAssertEqual(receivedStatus.count, 1)
+        XCTAssertEqual(receivedStatus.last, "200 OK")
+        XCTAssertEqual(receivedData.count, 2)
+        XCTAssertEqual(String(data: receivedData[0], encoding: .utf8), "TRACE")
+        XCTAssertEqual(receivedData.last?.count, 0)
+        receivedStatus.removeAll()
+        receivedData.removeAll()
+
+        // test PATCH /resource
+        environ = [
+            "REQUEST_METHOD": "PATCH",
+            "SCRIPT_NAME": "",
+            "PATH_INFO": "/resource",
+        ]
+        router.app(
+            environ,
+            startResponse: startResponse,
+            sendBody: sendBody
+        )
+        XCTAssertEqual(receivedStatus.count, 1)
+        XCTAssertEqual(receivedStatus.last, "200 OK")
+        XCTAssertEqual(receivedData.count, 2)
+        XCTAssertEqual(String(data: receivedData[0], encoding: .utf8), "PATCH")
+        XCTAssertEqual(receivedData.last?.count, 0)
+        receivedStatus.removeAll()
+        receivedData.removeAll()
+
+        // test GET /fallback
+        environ = [
+            "REQUEST_METHOD": "GET",
+            "SCRIPT_NAME": "",
+            "PATH_INFO": "/fallback",
+        ]
+        router.app(
+            environ,
+            startResponse: startResponse,
+            sendBody: sendBody
+        )
+        XCTAssertEqual(receivedStatus.count, 1)
+        XCTAssertEqual(receivedStatus.last, "200 OK")
+        XCTAssertEqual(receivedData.count, 2)
+        XCTAssertEqual(String(data: receivedData[0], encoding: .utf8), "*")
+        XCTAssertEqual(receivedData.last?.count, 0)
+        receivedStatus.removeAll()
+        receivedData.removeAll()
+
+        // test POST /fallback
+        environ = [
+            "REQUEST_METHOD": "POST",
+            "SCRIPT_NAME": "",
+            "PATH_INFO": "/fallback",
+        ]
+        router.app(
+            environ,
+            startResponse: startResponse,
+            sendBody: sendBody
+        )
+        XCTAssertEqual(receivedStatus.count, 1)
+        XCTAssertEqual(receivedStatus.last, "200 OK")
+        XCTAssertEqual(receivedData.count, 2)
+        XCTAssertEqual(String(data: receivedData[0], encoding: .utf8), "*")
+        XCTAssertEqual(receivedData.last?.count, 0)
+        receivedStatus.removeAll()
+        receivedData.removeAll()
+
+        // test CONNECT /fallback
+        environ = [
+        "REQUEST_METHOD": "CONNECT",
+        "SCRIPT_NAME": "",
+        "PATH_INFO": "/fallback",
+        ]
+        router.app(
+        environ,
+        startResponse: startResponse,
+        sendBody: sendBody
+        )
+        XCTAssertEqual(receivedStatus.count, 1)
+        XCTAssertEqual(receivedStatus.last, "200 OK")
+        XCTAssertEqual(receivedData.count, 2)
+        XCTAssertEqual(String(data: receivedData[0], encoding: .utf8), "*")
+        XCTAssertEqual(receivedData.last?.count, 0)
+        receivedStatus.removeAll()
+        receivedData.removeAll()
+
+    }
+
 }
