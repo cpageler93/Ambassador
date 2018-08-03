@@ -15,7 +15,7 @@ import Embassy
 public class JSONResponse: WebApp {
 
     /// Underlying data response
-    let dataResponse: DataResponse
+    var dataResponse: DataResponse
 
     public init(
         statusCode: Int = 200,
@@ -23,7 +23,7 @@ public class JSONResponse: WebApp {
         contentType: String = "application/json",
         jsonWritingOptions: JSONSerialization.WritingOptions = .prettyPrinted,
         headers: [(String, String)] = [],
-        handler: @escaping (_ environ: [String: Any], _ sendJSON: @escaping (Any) -> Void) -> Void
+        handler: @escaping (_ environ: [String: Any], _ response: DataResponse?, _ sendJSON: @escaping (Any) -> Void) -> Void
     ) {
         dataResponse = DataResponse(
             statusCode: statusCode,
@@ -31,7 +31,7 @@ public class JSONResponse: WebApp {
             contentType: contentType,
             headers: headers
         ) { environ, sendData in
-            handler(environ) { json in
+            handler(environ, nil) { json in
                 let data = try! JSONSerialization.data(withJSONObject: json, options: jsonWritingOptions)
                 sendData(data)
             }
@@ -61,6 +61,22 @@ public class JSONResponse: WebApp {
             }
             sendData(data)
         }
+    }
+
+    public static func make(closure: @escaping ([String: Any], DataResponse?, @escaping (Data) -> Void) -> Void) -> JSONResponse {
+        let response = JSONResponse()
+        response.dataResponse.handler = { environ, response, sendData in
+            closure(environ, response, sendData)
+        }
+        return response
+    }
+
+    public static func make(closure: @escaping ([String: Any], DataResponse?) -> Data) -> JSONResponse {
+        let response = JSONResponse()
+        response.dataResponse.handler = { environ, response, sendData in
+            sendData(closure(environ, response))
+        }
+        return response
     }
 
     public func app(
