@@ -63,18 +63,23 @@ public class JSONResponse: WebApp {
         }
     }
 
-    public static func make(closure: @escaping ([String: Any], DataResponse?, @escaping (Data) -> Void) -> Void) -> JSONResponse {
+    public static func make(closure: @escaping ([String: Any], DataResponse?, @escaping (Any) -> Void) -> Void) -> JSONResponse {
         let response = JSONResponse()
         response.dataResponse.handler = { environ, response, sendData in
-            closure(environ, response, sendData)
+            closure(environ, response) { json in
+                let data = try! JSONSerialization.data(withJSONObject: json, options: .prettyPrinted)
+                sendData(data)
+            }
         }
         return response
     }
 
-    public static func make(closure: @escaping ([String: Any], DataResponse?) -> Data) -> JSONResponse {
+    public static func make(closure: @escaping ([String: Any], DataResponse?) -> Any) -> JSONResponse {
         let response = JSONResponse()
         response.dataResponse.handler = { environ, response, sendData in
-            sendData(closure(environ, response))
+            let json = closure(environ, response)
+            let data = try! JSONSerialization.data(withJSONObject: json, options: .prettyPrinted)
+            sendData(data)
         }
         return response
     }
