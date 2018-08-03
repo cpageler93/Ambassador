@@ -23,7 +23,7 @@ public class JSONResponse: WebApp {
         contentType: String = "application/json",
         jsonWritingOptions: JSONSerialization.WritingOptions = .prettyPrinted,
         headers: [(String, String)] = [],
-        handler: @escaping (_ environ: [String: Any], _ response: DataResponse?, _ sendJSON: @escaping (Any) -> Void) -> Void
+        handler: @escaping (_ environ: [String: Any], _ sendJSON: @escaping (Any) -> Void) -> Void
     ) {
         dataResponse = DataResponse(
             statusCode: statusCode,
@@ -31,7 +31,7 @@ public class JSONResponse: WebApp {
             contentType: contentType,
             headers: headers
         ) { environ, sendData in
-            handler(environ, nil) { json in
+            handler(environ) { json in
                 let data = try! JSONSerialization.data(withJSONObject: json, options: jsonWritingOptions)
                 sendData(data)
             }
