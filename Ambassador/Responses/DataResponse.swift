@@ -6,23 +6,28 @@
 //  Copyright © 2016 Fang-Pen Lin. All rights reserved.
 //
 
-import Foundation
 
+import Foundation
 import Embassy
 
-// TODO: maybe we should move these stuff to Embassy instead
+
 /// Data response responses data from given handler immediately to the client
-public struct DataResponse: WebApp {
+public class DataResponse: WebApp {
+
     /// The status code to response
-    public let statusCode: Int
+    public var statusCode: Int
+
     /// The status message to response
-    public let statusMessage: String
+    public var statusMessage: String
+
     /// Headers to response
-    public let headers: [(String, String)]
+    public var headers: [(String, String)]
+
     /// Function for generating JSON response
-    public let handler: (_ environ: [String: Any], _ sendData: @escaping (Data) -> Void) -> Void
+    public var handler: (_ environ: [String: Any], _ response: DataResponse?, _ sendData: @escaping (Data) -> Void) -> Void
+    
     /// The Content type to response
-    public let contentType: String
+    public var contentType: String
 
     public init(
         statusCode: Int = 200,
@@ -35,7 +40,9 @@ public struct DataResponse: WebApp {
         self.statusMessage = statusMessage
         self.contentType = contentType
         self.headers = headers
-        self.handler = handler
+        self.handler = { environ, response, sendData in
+            handler(environ, sendData)
+        }
     }
 
     public init(
@@ -49,7 +56,7 @@ public struct DataResponse: WebApp {
         self.statusMessage = statusMessage
         self.contentType = contentType
         self.headers = headers
-        self.handler = { environ, sendData in
+        self.handler = { environ, response, sendData in
             if let handler = handler {
                 let data = handler(environ)
                 sendData(data)
@@ -59,12 +66,28 @@ public struct DataResponse: WebApp {
         }
     }
 
+    public static func make(closure: @escaping ([String: Any], DataResponse?, @escaping (Data) -> Void) -> Void) -> DataResponse {
+        let response = DataResponse()
+        response.handler = { environ, response, sendData in
+            closure(environ, response, sendData)
+        }
+        return response
+    }
+
+    public static func make(closure: @escaping ([String: Any], DataResponse?) -> Data) -> DataResponse {
+        let response = DataResponse()
+        response.handler = { environ, response, sendData in
+            sendData(closure(environ, response))
+        }
+        return response
+    }
+
     public func app(
         _ environ: [String: Any],
         startResponse: @escaping ((String, [(String, String)]) -> Void),
         sendBody: @escaping ((Data) -> Void)
     ) {
-        handler(environ) { data in
+        handler(environ, self) { data in
             var headers = self.headers
             let headerDict = MultiDictionary<String, String, LowercaseKeyTransform>(items: headers)
             if headerDict["Content-Type"] == nil {

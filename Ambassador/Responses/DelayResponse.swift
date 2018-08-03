@@ -6,12 +6,14 @@
 //  Copyright © 2016 Fang-Pen Lin. All rights reserved.
 //
 
-import Foundation
 
+import Foundation
 import Embassy
+
 
 /// A response app makes another app to delay its response for a specific time period
 public struct DelayResponse: WebApp {
+
     public enum Delay {
         case random(min: TimeInterval, max: TimeInterval)
         case delay(seconds: TimeInterval)
@@ -64,4 +66,5 @@ public struct DelayResponse: WebApp {
         }
         delayedApp.app(environ, startResponse: delayedStartResponse, sendBody: delayedSendBody)
     }
+    
 }

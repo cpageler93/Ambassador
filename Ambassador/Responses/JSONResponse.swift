@@ -6,12 +6,14 @@
 //  Copyright © 2016 Fang-Pen Lin. All rights reserved.
 //
 
-import Foundation
 
+import Foundation
 import Embassy
 
+
 /// A response app for responding JSON data
-public struct JSONResponse: WebApp {
+public class JSONResponse: WebApp {
+
     /// Underlying data response
     let dataResponse: DataResponse
 
@@ -68,4 +70,5 @@ public struct JSONResponse: WebApp {
     ) {
         return dataResponse.app(environ, startResponse: startResponse, sendBody: sendBody)
     }
+
 }

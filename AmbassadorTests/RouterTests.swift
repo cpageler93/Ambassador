@@ -537,4 +537,70 @@ class RouterTests: XCTestCase {
 
     }
 
+    func testDynamicStatusCode() {
+        let router = Router()
+
+        router.get(path: "/resource", DataResponse.make { (environ, response) in
+            return Data("GET".utf8)
+        })
+
+        router.get(path: "/failure", DataResponse.make { (environ, response) in
+            response?.statusCode = 500
+            response?.statusMessage =  "Internal Server Error"
+            return Data("GET".utf8)
+        })
+
+        var receivedStatus: [String] = []
+        let startResponse = { (status: String, headers: [(String, String)]) in
+            receivedStatus.append(status)
+        }
+
+        var receivedData: [Data] = []
+        let sendBody = { (data: Data) in
+            receivedData.append(data)
+        }
+
+
+        // test GET /resource
+        var environ = [
+            "REQUEST_METHOD": "GET",
+            "SCRIPT_NAME": "",
+            "PATH_INFO": "/resource",
+        ]
+
+        router.app(
+            environ,
+            startResponse: startResponse,
+            sendBody: sendBody
+        )
+        XCTAssertEqual(receivedStatus.count, 1)
+        XCTAssertEqual(receivedStatus.last, "200 OK")
+        XCTAssertEqual(receivedData.count, 2)
+        XCTAssertEqual(String(data: receivedData[0], encoding: .utf8), "GET")
+        XCTAssertEqual(receivedData.last?.count, 0)
+        receivedStatus.removeAll()
+        receivedData.removeAll()
+
+
+        // test GET /failure
+        environ = [
+            "REQUEST_METHOD": "GET",
+            "SCRIPT_NAME": "",
+            "PATH_INFO": "/failure",
+        ]
+
+        router.app(
+            environ,
+            startResponse: startResponse,
+            sendBody: sendBody
+        )
+        XCTAssertEqual(receivedStatus.count, 1)
+        XCTAssertEqual(receivedStatus.last, "500 Internal Server Error")
+        XCTAssertEqual(receivedData.count, 2)
+        XCTAssertEqual(String(data: receivedData[0], encoding: .utf8), "GET")
+        XCTAssertEqual(receivedData.last?.count, 0)
+        receivedStatus.removeAll()
+        receivedData.removeAll()
+    }
+
 }
